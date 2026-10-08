@@ -1,0 +1,15 @@
+venv/
+venv312/
+venv313/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+history.db
+temp_audios/
+temp_videos/
+.pytest_cache/
+.vscode/
+datasets/
+debug_model_input.jpg

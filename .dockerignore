@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.env
+venv
+.venv
+*.log
+temp_videos
+temp_audios
+metrics/*.json

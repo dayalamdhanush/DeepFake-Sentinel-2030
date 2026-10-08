@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepFake Sentinel 2030 — Explainable Multi-Modal Detection System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon">🛡️</div>
+                <div class="brand-text">
+                    <h1>SENTINEL <span>2030</span></h1>
+                    <p>DeepFake AI System</p>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </button>
+                <button class="nav-item" data-tab="image">
+                    <span class="icon">🖼️</span> Image Detection
+                </button>
+                <button class="nav-item" data-tab="video">
+                    <span class="icon">🎥</span> Video Detection
+                </button>
+                <button class="nav-item" data-tab="audio">
+                    <span class="icon">🎙️</span> Audio Detection
+                </button>
+                <button class="nav-item" data-tab="multimodal">
+                    <span class="icon">🔮</span> Multi-Modal Fusion
+                </button>
+                <button class="nav-item" data-tab="investigation">
+                    <span class="icon">🔍</span> Investigation Mode
+                </button>
+                <button class="nav-item" data-tab="history">
+                    <span class="icon">📜</span> Analysis History
+                </button>
+                <button class="nav-item" data-tab="models">
+                    <span class="icon">⚡</span> Model Status
+                </button>
+            </nav>
+
+            <div class="system-status-widget">
+                <div class="status-header">
+                    <span class="pulse-dot green" id="sys-status-dot"></span>
+                    <span class="status-title">Backend Status</span>
+                </div>
+                <div class="status-info" id="sys-status-text">Checking API...</div>
+                <div class="device-badge" id="sys-device-badge">Device: CPU</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-bar">
+                <div class="page-title">
+                    <h2 id="current-page-title">Dashboard Overview</h2>
+                    <p id="current-page-desc">Explainable AI multi-modal forensic analysis suite</p>
+                </div>
+                <div class="academic-badge">
+                    <span>Academic AI/ML Project — B.Tech CSE</span>
+                </div>
+            </header>
+
+            <div class="content-container">
+
+                <!-- 1. DASHBOARD TAB -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <div class="hero-card">
+                        <div class="hero-text">
+                            <h2>Explainable Multi-Modal DeepFake Sentinel</h2>
+                            <p>Detect AI-manipulated images, videos, and synthetic speech in real-time with explainable Grad-CAM heatmaps, temporal sequence classification, and weighted multi-modal fusion.</p>
+                            <div class="hero-actions">
+                                <button class="btn btn-primary" onclick="switchTab('multimodal')">Launch Multi-Modal Scan</button>
+                                <button class="btn btn-secondary" onclick="switchTab('models')">View Model Pipeline</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="stat-card">
+                            <div class="stat-header">Image Pipeline</div>
+                            <div class="stat-main">EfficientNet-B0</div>
+                            <div class="stat-sub" id="dash-img-status">Checking model...</div>
+                            <div class="stat-tag">Grad-CAM Heatmap</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">Video Pipeline</div>
+                            <div class="stat-main">ResNet-18 + LSTM</div>
+                            <div class="stat-sub" id="dash-vid-status">Checking model...</div>
+                            <div class="stat-tag">16 Uniform Frames</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">Audio Pipeline</div>
+                            <div class="stat-main">Log-Mel + CNN</div>
+                            <div class="stat-sub" id="dash-aud-status">Checking model...</div>
+                            <div class="stat-tag">128 Mel Bins</div>
+                        </div>
+                    </div>
+
+                    <div class="card card-margin">
+                        <h3>System Features & Integrity Safeguard</h3>
+                        <div class="features-list grid-2">
+                            <div class="feature-item">
+                                <div class="feature-icon">🛡️</div>
+                                <div>
+                                    <h4>No Fake Predictions Policy</h4>
+                                    <p>If a model file is missing from <code>models/</code>, the system strictly reports <strong>MODEL_NOT_TRAINED</strong> instead of fabricating fake confidence scores.</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🔬</div>
+                                <div>
+                                    <h4>Explainable AI (XAI)</h4>
+                                    <p>Grad-CAM visualizations identify exact spatial manipulation regions in image forensics.</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">⚡</div>
+                                <div>
+                                    <h4>Automatic Device Acceleration</h4>
+                                    <p>Automatically leverages NVIDIA CUDA GPU when available, defaulting safely to CPU execution.</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">📂</div>
+                                <div>
+                                    <h4>SQLite Forensic Logger</h4>
+                                    <p>Stores empirical predictions with timestamps, confidence scores, and risk classifications.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. IMAGE TAB -->
+                <section id="tab-image" class="tab-pane">
+                    <div class="card">
+                        <h3>Image DeepFake Detection</h3>
+                        <p class="subtitle">EfficientNet-B0 transfer learning model with Grad-CAM heatmap visual explanation. Max file size: 10 MB.</p>
+                        
+                        <div class="upload-zone" id="img-upload-zone" onclick="document.getElementById('img-file-input').click()">
+                            <div class="upload-icon">🖼️</div>
+                            <h4>Drag & Drop image here, or <span>Browse</span></h4>
+                            <p>Supports JPG, PNG, WEBP, BMP (Max 10 MB)</p>
+                            <input type="file" id="img-file-input" accept="image/*" style="display:none;" onchange="handleImageSelected(this.files[0])">
+                        </div>
+
+                        <div id="img-preview-container" class="preview-box hidden">
+                            <div class="preview-header">
+                                <span id="img-filename">filename.jpg</span>
+                                <button class="btn btn-sm btn-danger" onclick="resetImageScan()">Clear</button>
+                            </div>
+                            <div class="image-preview-wrapper">
+                                <img id="img-preview" src="" alt="Selected Preview">
+                            </div>
+                            <button class="btn btn-primary btn-block" id="btn-run-img" onclick="runImageAnalysis()">Run EfficientNet-B0 Analysis</button>
+                        </div>
+                    </div>
+
+                    <div id="img-result-box" class="card result-card hidden">
+                        <!-- Filled dynamically -->
+                    </div>
+                </section>
+
+                <!-- 3. VIDEO TAB -->
+                <section id="tab-video" class="tab-pane">
+                    <div class="card">
+                        <h3>Video DeepFake Detection</h3>
+                        <p class="subtitle">ResNet-18 CNN feature extraction + LSTM temporal sequence modeling across 16 uniform sampled frames. Max file size: 100 MB.</p>
+                        
+                        <div class="upload-zone" id="vid-upload-zone" onclick="document.getElementById('vid-file-input').click()">
+                            <div class="upload-icon">🎥</div>
+                            <h4>Drag & Drop video here, or <span>Browse</span></h4>
+                            <p>Supports MP4, AVI, MOV, MKV (Max 100 MB)</p>
+                            <input type="file" id="vid-file-input" accept="video/*" style="display:none;" onchange="handleVideoSelected(this.files[0])">
+                        </div>
+
+                        <div id="vid-preview-container" class="preview-box hidden">
+                            <div class="preview-header">
+                                <span id="vid-filename">video.mp4</span>
+                                <button class="btn btn-sm btn-danger" onclick="resetVideoScan()">Clear</button>
+                            </div>
+                            <button class="btn btn-primary btn-block" id="btn-run-vid" onclick="runVideoAnalysis()">Run ResNet-18 + LSTM Analysis</button>
+                        </div>
+                    </div>
+
+                    <div id="vid-result-box" class="card result-card hidden"></div>
+                </section>
+
+                <!-- 4. AUDIO TAB -->
+                <section id="tab-audio" class="tab-pane">
+                    <div class="card">
+                        <h3>Audio Synthetic Voice Detection</h3>
+                        <p class="subtitle">Librosa 16kHz resampling, 128 log-Mel spectrogram feature transformation + 3-Block CNN classifier. Max file size: 20 MB.</p>
+                        
+                        <div class="upload-zone" id="aud-upload-zone" onclick="document.getElementById('aud-file-input').click()">
+                            <div class="upload-icon">🎙️</div>
+                            <h4>Drag & Drop audio file here, or <span>Browse</span></h4>
+                            <p>Supports WAV, MP3, OGG, FLAC, M4A (Max 20 MB)</p>
+                            <input type="file" id="aud-file-input" accept="audio/*" style="display:none;" onchange="handleAudioSelected(this.files[0])">
+                        </div>
+
+                        <div id="aud-preview-container" class="preview-box hidden">
+                            <div class="preview-header">
+                                <span id="aud-filename">audio.wav</span>
+                                <button class="btn btn-sm btn-danger" onclick="resetAudioScan()">Clear</button>
+                            </div>
+                            <button class="btn btn-primary btn-block" id="btn-run-aud" onclick="runAudioAnalysis()">Run Log-Mel CNN Analysis</button>
+                        </div>
+                    </div>
+
+                    <div id="aud-result-box" class="card result-card hidden"></div>
+                </section>
+
+                <!-- 5. MULTI-MODAL FUSION TAB -->
+                <section id="tab-multimodal" class="tab-pane">
+                    <div class="card">
+                        <h3>Multi-Modal Fusion Analysis</h3>
+                        <p class="subtitle">Combine independent predictions from image, video, and audio modalities using weighted probability fusion.</p>
+                        
+                        <div class="grid-3 modal-inputs">
+                            <div class="mini-upload-card">
+                                <h4>1. Image Modality</h4>
+                                <input type="file" id="fusion-img-input" accept="image/*">
+                            </div>
+                            <div class="mini-upload-card">
+                                <h4>2. Video Modality</h4>
+                                <input type="file" id="fusion-vid-input" accept="video/*">
+                            </div>
+                            <div class="mini-upload-card">
+                                <h4>3. Audio Modality</h4>
+                                <input type="file" id="fusion-aud-input" accept="audio/*">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-block card-margin" onclick="runMultiModalFusion()">Execute Multi-Modal Fusion Pipeline</button>
+                    </div>
+
+                    <div id="fusion-result-box" class="card result-card hidden"></div>
+                </section>
+
+                <!-- 6. INVESTIGATION TAB -->
+                <section id="tab-investigation" class="tab-pane">
+                    <div class="card">
+                        <h3>Forensic Investigation Mode</h3>
+                        <p class="subtitle">Deep forensic evidence breakdown separating model evidence from definitive conclusions.</p>
+                        <div id="investigation-content">
+                            <p class="placeholder-text">Run any single or multi-modal analysis to inspect detailed evidence here.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. HISTORY TAB -->
+                <section id="tab-history" class="tab-pane">
+                    <div class="card">
+                        <div class="flex-between">
+                            <h3>Forensic Analysis History</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="loadHistory()">🔄 Refresh History</button>
+                        </div>
+                        <div class="table-container card-margin">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Filename</th>
+                                        <th>Media Type</th>
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th>Risk Level</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-tbody">
+                                    <tr><td colspan="7" class="text-center">Loading forensic logs...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. MODEL STATUS TAB -->
+                <section id="tab-models" class="tab-pane">
+                    <div class="card">
+                        <div class="flex-between">
+                            <h3>Neural Network Model Pipeline Status</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="loadModelStatus()">🔄 Refresh Status</button>
+                        </div>
+                        <p class="subtitle">Verifies actual presence and loadability of PyTorch model checkpoints in <code>models/</code> directory.</p>
+
+                        <div class="grid-3 card-margin" id="models-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
