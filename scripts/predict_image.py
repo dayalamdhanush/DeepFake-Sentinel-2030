@@ -35,8 +35,7 @@ def parse_args():
 
 def load_image(image_path: str, device: torch.device):
     transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
@@ -71,7 +70,8 @@ def main():
     risk = get_risk(fake_conf)
 
     # Grad‑CAM heatmap (only if model present)
-    heatmap_img = generate_gradcam_heatmap(model, input_tensor, class_idx=1)
+    class_idx = 1 if label == "FAKE" else 0
+    heatmap_img = generate_gradcam_heatmap(model, input_tensor, class_idx=class_idx)
     buffered = io.BytesIO()
     if isinstance(heatmap_img, Image.Image):
         heatmap_img.save(buffered, format="PNG")

@@ -1,52 +1,66 @@
 # backend/services/audio_service.py
 """Audio processing service for DeepFake Sentinel 2030.
 
-- Loads an audio file with librosa.
-- Resamples to 16 kHz.
-- Generates a log‑Mel spectrogram (128 mel bins).
-- Normalizes to zero‑mean, unit‑variance (per‑sample).
-- Returns a torch tensor of shape (1, 1, 128, time_frames).
+All preprocessing is delegated to ml.audio.preprocessing, which is the
+single source of truth.  This module provides thin wrappers used by the
+backend API so that existing import paths continue to work unchanged.
+
+Preprocessing parameters (defined in ml.audio.preprocessing):
+  - 16 kHz mono audio
+  - 3-second non-overlapping chunks (all chunks, not just 5)
+  - 128-bin log-Mel spectrogram (n_fft=1024, hop_length=512)
+  - Fixed 128-frame time axis (pad/truncate)
+  - Per-spectrogram mean/std normalization
+  - FAKE=0, REAL=1
 """
 
+import sys
 import os
-import numpy as np
-import torch
-import librosa
 from pathlib import Path
 
-# Constants for spectrogram generation
-SR = 16000  # target sampling rate
-N_MELS = 128
-HOP_LENGTH = 512
-WINDOW = "hann"
+import torch
+
+# Ensure project root is on sys.path so ml.audio.preprocessing is importable
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
+from ml.audio.preprocessing import (
+    audio_path_to_tensor,
+    # Re-export constants so any code that imported them from here still works
+    SR, N_MELS, N_FFT, HOP_LENGTH, FIXED_FRAMES,
+    CHUNK_DURATION, CHUNK_SAMPLES,
+    CLASS_TO_IDX, IDX_TO_CLASS, FAKE_IDX, REAL_IDX,
+    aggregate_logits,
+)
+
+MAX_LEN = FIXED_FRAMES   # alias for backward compatibility
+
 
 def load_audio_tensor(audio_path: str) -> torch.Tensor:
-    """Load ``audio_path`` and return a normalized log‑Mel spectrogram tensor.
+    """
+    Load audio file and return normalized log-Mel spectrogram tensor.
 
-    Returns ``(1, 1, N_MELS, T)`` where ``T`` depends on audio length.
-    Raises ``ValueError`` on failure.
+    Returns
+    -------
+    torch.Tensor  shape (num_chunks, 1, 128, 128)
+      All non-overlapping 3-second chunks are returned (no cap at 5).
+      Short audio (< 3s) is zero-padded to produce exactly 1 chunk.
     """
     if not Path(audio_path).is_file():
-        raise ValueError("Audio file not found")
+        raise ValueError(f"Audio file not found: {audio_path}")
     try:
-        y, _ = librosa.load(audio_path, sr=SR, mono=True)
+        return audio_path_to_tensor(audio_path)
     except Exception as e:
-        raise ValueError(f"Librosa failed to load audio: {e}")
-    # Compute Mel spectrogram
-    mel_spec = librosa.feature.melspectrogram(y=y, sr=SR, n_mels=N_MELS, hop_length=HOP_LENGTH, window=WINDOW)
-    # Convert to log scale (dB)
-    log_mel = librosa.power_to_db(mel_spec, ref=np.max)
-    # Normalize to zero mean / unit variance (per‑sample)
-    mean = log_mel.mean()
-    std = log_mel.std() if log_mel.std() > 0 else 1.0
-    norm_log_mel = (log_mel - mean) / std
-    # Convert to tensor (1, 1, N_MELS, T)
-    tensor = torch.from_numpy(norm_log_mel).unsqueeze(0).unsqueeze(0).float()
-    return tensor
+        raise ValueError(f"Failed to process audio: {e}")
+
 
 def prepare_batch(audio_path: str, device: torch.device) -> torch.Tensor:
-    """Convenience wrapper that loads the spectrogram and moves it to ``device``.
-    Returns ``(1, 1, N_MELS, T)``.
     """
-    tensor = load_audio_tensor(audio_path)
-    return tensor.to(device)
+    Convenience wrapper — loads spectrogram chunks and moves to device.
+
+    Returns
+    -------
+    torch.Tensor  shape (num_chunks, 1, 128, 128) on `device`
+    """
+    return load_audio_tensor(audio_path).to(device)

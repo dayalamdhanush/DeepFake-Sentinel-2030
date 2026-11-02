@@ -46,7 +46,17 @@ def main():
     with torch.no_grad():
         for specs, labels in test_loader:
             specs = specs.to(device)
-            outputs = model(specs)
+
+            if specs.ndim == 5:
+                batch_size, segments, channels, height, width = specs.shape
+                specs = specs.reshape(
+                    batch_size * segments, channels, height, width
+                )
+                outputs = model(specs)
+                outputs = outputs.reshape(batch_size, segments, -1).mean(dim=1)
+            else:
+                outputs = model(specs)
+
             _, preds = torch.max(outputs, 1)
             all_labels.extend(labels.tolist())
             all_preds.extend(preds.cpu().tolist())

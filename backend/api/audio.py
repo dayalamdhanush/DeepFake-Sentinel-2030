@@ -3,11 +3,14 @@
 
 POST /predict/audio
     - Accepts an audio file (wav, mp3, ogg, flac, m4a - max 20 MB).
-    - Uses backend.services.audio_service to build log-Mel spectrogram.
-    - Runs AudioCNN model if checkpoint exists.
-    - Returns JSON with label, confidence, fake_probability, risk, processing_time.
+    - Uses ml.audio.preprocessing (via audio_service) for standardized
+      log-Mel spectrogram chunks: 16 kHz, 3s, 128-bin, fixed 128 frames.
+    - CLASS MAPPING: FAKE=0, REAL=1 (consistent with training).
+    - Prefers models/audio_cnn_repaired.pth; falls back to audio_cnn.pth.
+    - Returns JSON with label, confidence, fake_probability, real_probability,
+      risk, chunks_analyzed, processing_time_sec.
     - Logs successful prediction to SQLite database.
-    - If checkpoint missing -> {"error": "MODEL_NOT_TRAINED"}.
+    - If no checkpoint exists -> {"error": "MODEL_NOT_TRAINED"}.
 """
 
 import os
@@ -18,78 +21,130 @@ import torch
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 
-from backend.services.audio_service import prepare_batch
+from backend.services.audio_service import prepare_batch, aggregate_logits
 from backend.models.audio_cnn import get_audio_model
 from backend.history.db import log_prediction
 
 router = APIRouter()
 
-ALLOWED_EXT = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
+ALLOWED_EXT    = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
 MAX_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
-RISK_LEVELS = [(0.0, 0.4, "LOW"), (0.4, 0.7, "MEDIUM"), (0.7, 1.0, "HIGH")]
 
-def _risk_from_conf(conf: float) -> str:
-    for lo, hi, label in RISK_LEVELS:
-        if lo <= conf < hi:
-            return label
-    return "HIGH"
+# Preferred checkpoint (repaired), fallback to original
+_REPAIRED       = Path("models/audio_cnn_repaired.pth")
+_ORIGINAL       = Path("models/audio_cnn.pth")
+_THRESHOLD_FILE = Path("metrics/audio_threshold.json")
+
+
+def _get_threshold() -> float:
+    """Return calibrated threshold from metrics/audio_threshold.json if present, else 0.50."""
+    if _THRESHOLD_FILE.is_file():
+        try:
+            import json
+            with open(_THRESHOLD_FILE, "r") as f:
+                data = json.load(f)
+                return float(data.get("calibrated_threshold", 0.50))
+        except Exception:
+            pass
+    return 0.50
+
+
+def _get_checkpoint() -> Path | None:
+    """Return the best available checkpoint, or None if none exist."""
+    if _REPAIRED.is_file():
+        return _REPAIRED
+    if _ORIGINAL.is_file():
+        return _ORIGINAL
+    return None
+
 
 @router.post("/predict/audio")
 async def predict_audio(file: UploadFile = File(...)):
     start = time.time()
+
+    # ── Validate extension ─────────────────────────────────────────────────────
     suffix = Path(file.filename).suffix.lower()
     if suffix not in ALLOWED_EXT:
         raise HTTPException(status_code=400, detail="Unsupported audio format")
-    
-    temp_dir = Path("temp_audios")
+
+    # ── Save temp file ─────────────────────────────────────────────────────────
+    temp_dir  = Path("temp_audios")
     temp_dir.mkdir(exist_ok=True)
-    temp_path = temp_dir / f"{int(time.time()*1000)}_{file.filename}"
-    content = await file.read()
+    temp_path = temp_dir / f"{int(time.time() * 1000)}_{file.filename}"
+    content   = await file.read()
     if len(content) > MAX_SIZE_BYTES:
-        raise HTTPException(status_code=413, detail="Audio file too large (max 20 MB)")
+        raise HTTPException(status_code=413,
+                            detail="Audio file too large (max 20 MB)")
     with open(temp_path, "wb") as f:
         f.write(content)
 
-    checkpoint_path = Path("models/audio_cnn.pth")
-    if not checkpoint_path.is_file():
+    # ── Checkpoint ─────────────────────────────────────────────────────────────
+    checkpoint_path = _get_checkpoint()
+    if checkpoint_path is None:
         temp_path.unlink(missing_ok=True)
         return JSONResponse(content={"error": "MODEL_NOT_TRAINED"}, status_code=200)
 
+    # ── Load model ─────────────────────────────────────────────────────────────
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = get_audio_model(num_classes=2).to(device)
+    model  = get_audio_model(num_classes=2).to(device)
     try:
-        model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+        state = torch.load(checkpoint_path, map_location=device, weights_only=False)
+        model.load_state_dict(state)
     except Exception as e:
         temp_path.unlink(missing_ok=True)
-        return JSONResponse(content={"error": "MODEL_LOAD_ERROR", "detail": str(e)}, status_code=200)
+        return JSONResponse(
+            content={"error": "MODEL_LOAD_ERROR", "detail": str(e)},
+            status_code=200,
+        )
     model.eval()
 
+    # ── Preprocess ─────────────────────────────────────────────────────────────
     try:
-        batch = prepare_batch(str(temp_path), device)
+        batch = prepare_batch(str(temp_path), device)   # (N, 1, 128, 128)
     except Exception as e:
         temp_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=500, detail=f"Audio preprocessing error: {e}")
+        raise HTTPException(status_code=500,
+                            detail=f"Audio preprocessing error: {e}")
+    finally:
+        temp_path.unlink(missing_ok=True)
 
+    # ── Inference ──────────────────────────────────────────────────────────────
     with torch.no_grad():
-        logits = model(batch)
-        probs = torch.softmax(logits, dim=1)
-        fake_conf = probs[0, 1].item()
-    label = "FAKE" if fake_conf >= 0.5 else "REAL"
-    risk = _risk_from_conf(fake_conf)
-    processing_time = round(time.time() - start, 3)
-    temp_path.unlink(missing_ok=True)
+        logits = model(batch)                            # (N, 2)
 
-    # Log prediction
+    # Use the standardized aggregation (FAKE=0, REAL=1) with calibrated threshold
+    threshold  = _get_threshold()
+    result     = aggregate_logits(logits.cpu(), threshold=threshold)
+    fake_prob  = result["fake_probability"]
+    real_prob  = result["real_probability"]
+    confidence = result["confidence"]
+    label      = result["label"].upper()                 # 'FAKE' or 'REAL'
+    n_chunks   = int(batch.shape[0])
+
+    if fake_prob >= 0.7:
+        risk = "HIGH"
+    elif fake_prob >= 0.4:
+        risk = "MEDIUM"
+    else:
+        risk = "LOW"
+
+    processing_time = round(time.time() - start, 3)
+
+    # ── Log prediction ─────────────────────────────────────────────────────────
     try:
-        log_prediction(file.filename, "audio", label, fake_conf if label == "FAKE" else 1.0 - fake_conf, risk)
+        log_prediction(file.filename, "audio", label, confidence, risk)
     except Exception:
-        pass
+        pass  # Never let logging failures break the response
 
     response = {
-        "label": label,
-        "confidence": fake_conf if label == "FAKE" else 1.0 - fake_conf,
-        "fake_probability": fake_conf,
-        "risk": risk,
+        "label":               label,
+        "confidence":          round(confidence, 4),
+        "fake_probability":    round(fake_prob,  4),
+        "real_probability":    round(real_prob,  4),
+        "risk":                risk,
+        "threshold_used":      round(threshold,  4),
+        "chunks_analyzed":     n_chunks,
         "processing_time_sec": processing_time,
+        "checkpoint_used":     str(checkpoint_path),
     }
     return JSONResponse(content=response)

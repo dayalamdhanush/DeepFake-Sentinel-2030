@@ -1,0 +1,262 @@
+{
+  "checkpoint": "C:\\Users\\dhanu\\OneDrive\\Attachments\\Documents\\deep_learning\\models\\audio_cnn_repaired.pth",
+  "test_set": "C:\\Users\\dhanu\\OneDrive\\Attachments\\Documents\\deep_learning\\datasets\\audio\\test",
+  "n_samples": 16,
+  "calibrated_threshold": 0.5,
+  "metrics_at_default_0_50": {
+    "accuracy": 0.5625,
+    "macro_precision": 0.6026,
+    "macro_recall": 0.5625,
+    "macro_f1": 0.5152,
+    "per_class": {
+      "fake": {
+        "precision": 0.6667,
+        "recall": 0.25,
+        "f1": 0.3636
+      },
+      "real": {
+        "precision": 0.5385,
+        "recall": 0.875,
+        "f1": 0.6667
+      }
+    },
+    "confusion_matrix": [
+      [
+        2,
+        6
+      ],
+      [
+        1,
+        7
+      ]
+    ],
+    "actual_distribution": {
+      "fake": 8,
+      "real": 8
+    },
+    "predicted_distribution": {
+      "fake": 3,
+      "real": 13
+    },
+    "collapsed": false
+  },
+  "metrics_at_calibrated": {
+    "accuracy": 0.5625,
+    "macro_precision": 0.6026,
+    "macro_recall": 0.5625,
+    "macro_f1": 0.5152,
+    "per_class": {
+      "fake": {
+        "precision": 0.6667,
+        "recall": 0.25,
+        "f1": 0.3636
+      },
+      "real": {
+        "precision": 0.5385,
+        "recall": 0.875,
+        "f1": 0.6667
+      }
+    },
+    "confusion_matrix": [
+      [
+        2,
+        6
+      ],
+      [
+        1,
+        7
+      ]
+    ],
+    "actual_distribution": {
+      "fake": 8,
+      "real": 8
+    },
+    "predicted_distribution": {
+      "fake": 3,
+      "real": 13
+    },
+    "collapsed": false
+  },
+  "evaluation_time_sec": 3.42,
+  "per_file_details": [
+    {
+      "file": "speech_0000.wav",
+      "true_class": "fake",
+      "pred_class": "real",
+      "fake_prob": 0.4238,
+      "real_prob": 0.5762,
+      "confidence": 0.5762,
+      "correct": false
+    },
+    {
+      "file": "speech_0001.wav",
+      "true_class": "fake",
+      "pred_class": "fake",
+      "fake_prob": 0.534,
+      "real_prob": 0.466,
+      "confidence": 0.534,
+      "correct": true
+    },
+    {
+      "file": "speech_0002.wav",
+      "true_class": "fake",
+      "pred_class": "real",
+      "fake_prob": 0.3573,
+      "real_prob": 0.6427,
+      "confidence": 0.6427,
+      "correct": false
+    },
+    {
+      "file": "speech_0003.wav",
+      "true_class": "fake",
+      "pred_class": "real",
+      "fake_prob": 0.475,
+      "real_prob": 0.525,
+      "confidence": 0.525,
+      "correct": false
+    },
+    {
+      "file": "speech_0004.wav",
+      "true_class": "fake",
+      "pred_class": "fake",
+      "fake_prob": 0.5493,
+      "real_prob": 0.4507,
+      "confidence": 0.5493,
+      "correct": true
+    },
+    {
+      "file": "speech_0005.wav",
+      "true_class": "fake",
+      "pred_class": "real",
+      "fake_prob": 0.4839,
+      "real_prob": 0.5161,
+      "confidence": 0.5161,
+      "correct": false
+    },
+    {
+      "file": "speech_0006.wav",
+      "true_class": "fake",
+      "pred_class": "real",
+      "fake_prob": 0.3856,
+      "real_prob": 0.6144,
+      "confidence": 0.6144,
+      "correct": false
+    },
+    {
+      "file": "speech_0007.wav",
+      "true_class": "fake",
+      "pred_class": "real",
+      "fake_prob": 0.3411,
+      "real_prob": 0.6589,
+      "confidence": 0.6589,
+      "correct": false
+    },
+    {
+      "file": "speech_0000.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.44,
+      "real_prob": 0.56,
+      "confidence": 0.56,
+      "correct": true
+    },
+    {
+      "file": "speech_0001.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.3225,
+      "real_prob": 0.6775,
+      "confidence": 0.6775,
+      "correct": true
+    },
+    {
+      "file": "speech_0002.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.3539,
+      "real_prob": 0.6461,
+      "confidence": 0.6461,
+      "correct": true
+    },
+    {
+      "file": "speech_0003.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.4028,
+      "real_prob": 0.5972,
+      "confidence": 0.5972,
+      "correct": true
+    },
+    {
+      "file": "speech_0004.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.4452,
+      "real_prob": 0.5548,
+      "confidence": 0.5548,
+      "correct": true
+    },
+    {
+      "file": "speech_0005.wav",
+      "true_class": "real",
+      "pred_class": "fake",
+      "fake_prob": 0.5197,
+      "real_prob": 0.4803,
+      "confidence": 0.5197,
+      "correct": false
+    },
+    {
+      "file": "speech_0006.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.4156,
+      "real_prob": 0.5844,
+      "confidence": 0.5844,
+      "correct": true
+    },
+    {
+      "file": "speech_0007.wav",
+      "true_class": "real",
+      "pred_class": "real",
+      "fake_prob": 0.2162,
+      "real_prob": 0.7838,
+      "confidence": 0.7838,
+      "correct": true
+    }
+  ],
+  "accuracy": 0.5625,
+  "macro_precision": 0.6026,
+  "macro_recall": 0.5625,
+  "macro_f1": 0.5152,
+  "per_class": {
+    "fake": {
+      "precision": 0.6667,
+      "recall": 0.25,
+      "f1": 0.3636
+    },
+    "real": {
+      "precision": 0.5385,
+      "recall": 0.875,
+      "f1": 0.6667
+    }
+  },
+  "confusion_matrix": [
+    [
+      2,
+      6
+    ],
+    [
+      1,
+      7
+    ]
+  ],
+  "actual_distribution": {
+    "fake": 8,
+    "real": 8
+  },
+  "predicted_distribution": {
+    "fake": 3,
+    "real": 13
+  },
+  "collapsed": false
+}

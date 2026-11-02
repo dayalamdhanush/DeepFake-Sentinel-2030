@@ -1,9 +1,4 @@
 {
-  "model": "Log-Mel CNN",
-  "modality": "audio",
-  "dataset": "Hemg/Deepfake-Audio-Dataset",
-  "total_samples": 100,
-  "test_samples": 16,
   "accuracy": 0.5,
   "precision": 0.0,
   "recall": 0.0,
@@ -17,6 +12,5 @@
       8,
       0
     ]
-  ],
-  "training_time_seconds": 25.35
+  ]
 }

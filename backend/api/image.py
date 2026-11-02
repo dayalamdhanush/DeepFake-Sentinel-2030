@@ -4,6 +4,7 @@
 POST /predict/image
     - Accepts an image file (JPEG, PNG, WEBP, BMP - max 10 MB).
     - Runs EfficientNet-B0 model if trained checkpoint exists.
+    - Accurately maps class 0 (Fake/Synthetic) and class 1 (Real/Authentic).
     - Generates real Grad-CAM heatmap visualization.
     - Returns JSON response with label, confidence, fake_probability, risk, gradcam (base64 data URI).
     - Logs successful prediction to SQLite database.
@@ -33,13 +34,6 @@ router = APIRouter()
 MODEL_PATH = Path("models/efficientnet_b0_deepfake.pth")
 MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
-RISK_LEVELS = [(0.0, 0.4, "LOW"), (0.4, 0.7, "MEDIUM"), (0.7, 1.0, "HIGH")]
-
-def _risk_from_conf(conf: float) -> str:
-    for lo, hi, label in RISK_LEVELS:
-        if lo <= conf < hi:
-            return label
-    return "HIGH"
 
 @router.post("/predict/image")
 async def predict_image_endpoint(file: UploadFile = File(...)) -> JSONResponse:
@@ -68,9 +62,9 @@ async def predict_image_endpoint(file: UploadFile = File(...)) -> JSONResponse:
         return JSONResponse(content={"error": "MODEL_LOAD_ERROR", "detail": str(e)}, status_code=200)
     model.eval()
 
+    # Preprocessing matching model training pipeline (Resize 224x224)
     preprocess = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -79,28 +73,38 @@ async def predict_image_endpoint(file: UploadFile = File(...)) -> JSONResponse:
     with torch.no_grad():
         logits = model(input_tensor)
         probs = torch.softmax(logits, dim=1)
-        fake_conf = probs[0, 1].item()
+        # Class 0: Synthetic / DeepFake, Class 1: Authentic Human
+        fake_prob = probs[0, 0].item()
+        real_prob = probs[0, 1].item()
 
-    label = "FAKE" if fake_conf >= 0.5 else "REAL"
-    risk = _risk_from_conf(fake_conf)
+    if real_prob >= fake_prob:
+        label = "REAL"
+        confidence = round(real_prob, 4)
+        risk = "LOW" if real_prob >= 0.70 else "MEDIUM"
+    else:
+        label = "FAKE"
+        confidence = round(fake_prob, 4)
+        risk = "HIGH" if fake_prob >= 0.70 else "MEDIUM"
+
     processing_time = round(time.time() - start_time, 3)
 
-    # Grad-CAM heatmap generation
-    heatmap_img = generate_gradcam_heatmap(model, input_tensor, target_layer="features[7]", class_idx=1)
+    # Grad-CAM heatmap generation: visualize activations for the predicted class
+    class_idx = 0 if label == "FAKE" else 1
+    heatmap_img = generate_gradcam_heatmap(model, input_tensor, target_layer="features[7]", class_idx=class_idx)
     buffered = io.BytesIO()
     heatmap_img.save(buffered, format="PNG")
     heatmap_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
     # Log to SQLite history
     try:
-        log_prediction(file.filename, "image", label, fake_conf if label == "FAKE" else 1.0 - fake_conf, risk)
+        log_prediction(file.filename, "image", label, confidence, risk)
     except Exception:
         pass
 
     response: Dict[str, Any] = {
         "label": label,
-        "confidence": fake_conf if label == "FAKE" else 1.0 - fake_conf,
-        "fake_probability": fake_conf,
+        "confidence": confidence,
+        "fake_probability": round(fake_prob, 4),
         "risk": risk,
         "processing_time_sec": processing_time,
         "gradcam": f"data:image/png;base64,{heatmap_b64}",

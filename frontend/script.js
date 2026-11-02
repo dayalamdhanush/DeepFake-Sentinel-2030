@@ -1,7 +1,7 @@
 // frontend/script.js - DeepFake Sentinel 2030 Interactivity
 // Production-Ready Frontend Controller
 
-const API_BASE = window.location.origin.includes('8000') ? window.location.origin : 'http://localhost:8000';
+const API_BASE = (window.location.protocol.startsWith('http') && window.location.origin) ? window.location.origin : 'http://localhost:8000';
 
 let selectedImageFile = null;
 let selectedVideoFile = null;
@@ -382,7 +382,7 @@ function renderModalityResult(container, data, mediaType, filename) {
                 </div>
             </div>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
-                🔴 Red/Yellow highlight areas of peak activation corresponding to anomalous deepfake facial features.
+                ${isFake ? '🔴 Red/Yellow highlights indicate anomalous spatial regions corresponding to suspected deepfake manipulation patterns.' : '🟢 / 🔴 Highlights indicate primary facial landmark regions evaluated by EfficientNet-B0 confirming natural biometric consistency.'}
             </p>
         `;
     } else if (data.sampled_frames) {
